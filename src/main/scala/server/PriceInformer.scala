@@ -1,47 +1,52 @@
 package server
 
-import java.io.File
-import java.nio.file.{Path, Paths}
-import scala.concurrent.ExecutionContext.Implicits.global
+import java.nio.file.Path
 
+import akka.NotUsed
+
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
 import akka.actor.{Actor, ActorLogging, ActorRef}
-import akka.stream.ActorMaterializer
-import akka.stream.javadsl.Framing
-import akka.stream.scaladsl.{FileIO, Sink}
+import akka.stream.{ActorMaterializer, IOResult}
+import akka.stream.javadsl.{Flow, Framing}
+import akka.stream.scaladsl.{FileIO, Sink, Source}
 import akka.util.ByteString
-import model.{BookNotFound, Price, PriceRequest}
+import model.{Book, BookNotFound, PriceRequest}
+
+import scala.concurrent.Future
 
 
 class PriceInformer(dbs: List[Path]) extends Actor with ActorLogging{
-
-  implicit val materializer = ActorMaterializer.create(context)
+  implicit val materializer: ActorMaterializer = ActorMaterializer.create(context)
   override def receive: Receive = {
     case PriceRequest(title) => handlePriceReq(title, sender())
+    case _ => log.info("unrecognized msg")
   }
 
   def handlePriceReq(title: String, to: ActorRef): Unit = {
-    val framing = Framing.delimiter(ByteString("\n"), Int.MaxValue)
 
-    dbs
-      .map(FileIO.fromPath(_) via framing)
-      .reduce(_ merge _)
-      .map(_.utf8String)
-      .filter(_.contains(title))
-      .take(1)
-      .map(_.split("<#>")(2))
-      .map(BigDecimal(_))
-      .runWith(Sink.seq[BigDecimal])
-      .onComplete({
-        case Success(price: Seq[BigDecimal]) => {
-          log.info(s"found: ${price head}")
-          to ! Price(price head)
-        }
-        case Failure(t: Throwable) => {
-          log.info("error")
-          to ! BookNotFound()
-        }
-      })
+    val sources = dbs.map( open(_) recover replacingErrorByEmptyString via framing.async
+      map {_.utf8String}
+      filter(_.contains(title)))
+
+    (sources reduce (_ merge _))
+     .take(1)
+     .map(s => {Book(s.split("<#>")(1).trim, BigDecimal(s.split("<#>")(2).trim))})
+     .runWith(Sink.seq[Book])
+     .onComplete({
+       case Success(book: Seq[Book]) =>
+         log.info(s"found: ${(book head).title}")
+         to ! (book head)
+
+       case Failure(_) =>
+         log.info("error")
+         to ! BookNotFound()
+
+     })
 
   }
+
+  val framing: Flow[ByteString, ByteString, NotUsed] = Framing.delimiter(ByteString("\n"), Int.MaxValue)
+  val replacingErrorByEmptyString: PartialFunction[Throwable,ByteString] = {case _: Exception => ByteString("")}
+  val open: Path => Source[ByteString, Future[IOResult]] = FileIO.fromPath(_)
 }

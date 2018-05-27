@@ -1,4 +1,4 @@
-name := "library-akka"
+name := "bookstore-akka"
 
 version := "0.1"
 

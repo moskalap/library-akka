@@ -1,5 +1,5 @@
 Suzanne Collins<#>The Hunger Games (The Hunger Games, #1)<#>64
-J.K. Rowling, Mary GrandPré<#>Harry Potter and the Sorcerer's Stone (Harry Potter, #1)<#>75
+J.K. Rowling, Mary GrandPré<#>Harry Potter and the Sorcerer's Stone<#>75
 F. Scott Fitzgerald<#>The Great Gatsby<#>62
 John Green<#>The Fault in Our Stars<#>48
 J.D. Salinger<#>The Catcher in the Rye<#>53
@@ -20,7 +20,7 @@ Kathryn Stockett<#>The Help<#>30
 E.L. James<#>Fifty Shades of Grey (Fifty Shades, #1)<#>68
 C.S. Lewis<#>The Lion, the Witch, and the Wardrobe (Chronicles of Narnia, #1)<#>100
 Audrey Niffenegger<#>The Time Traveler's Wife<#>11
-George R.R. Martin<#>A Game of Thrones (A Song of Ice and Fire, #1)<#>93
+George R.R. Martin<#>A Game of Thrones<#>93
 Louisa May Alcott<#>Little Women (Little Women, #1)<#>85
 Markus Zusak<#>The Book Thief<#>75
 Ray Bradbury<#>Fahrenheit 451<#>91
